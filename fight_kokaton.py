@@ -196,6 +196,7 @@ class Explosion:
         """
         self.life -= 1
         screen.blit(self.imgs[self.life // 5 % 4], self.rct)
+  
         
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
