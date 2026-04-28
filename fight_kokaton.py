@@ -160,6 +160,32 @@ class Score:
         """
         self.img = self.font.render(f"Score: {self.score}", 0, self.color)
         screen.blit(self.img, self.rct)
+
+# 【応用3】Explosionクラスの定義
+class Explosion:
+    def __init__(self, obj: Bomb):
+        """
+        爆発エフェクトのSurfaceを生成し、対応するRectを返す
+        引数 obj：爆発した爆弾（Bombインスタンス）
+        """
+        img = pg.image.load("fig/explosion.gif")
+        self.imgs = [
+            img, 
+            pg.transform.flip(img, True, False),
+            pg.transform.flip(img, False, True),
+            pg.transform.flip(img, True, True)
+        ]
+        self.rct = img.get_rect()
+        self.rct.center = obj.rct.center
+        self.life = 20 
+
+    def update(self, screen: pg.Surface):
+        """
+        爆発の表示時間を減らし，反転画像を交互に画面に転送する
+        引数:screen Surface
+        """
+        self.life -= 1
+        screen.blit(self.imgs[self.life // 5 % 4], self.rct)
         
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
@@ -170,6 +196,7 @@ def main():
     
     score = Score() # 応用1
     beams = [] # 応用2-空リスト
+    explosions = [] #応用3-空リスト
 
     beam = None  # ゲーム初期化時にはビームは存在しない
     clock = pg.time.Clock()
@@ -198,6 +225,7 @@ def main():
             for j, beam in enumerate(beams):
                 if beam is not None and bomb is not None:
                     if beam.rct.colliderect(bomb.rct):
+                        explosions.append(Explosion(bomb))# 応用3-爆発
                         beams[j] = None # 応用2ビームを消去
                         bombs[i] = None # 練習2爆弾を消去
                         bird.change_img(6, screen) 
@@ -206,6 +234,7 @@ def main():
         
         bombs = [bomb for bomb in bombs if bomb is not None]
         beams = [b for b in beams if b is not None] # 応用2
+        explosions = [ex for ex in explosions if ex.life > 0]#応用3
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
@@ -215,9 +244,12 @@ def main():
         for bomb in bombs:
             bomb.update(screen)
         
-        # 【応用1】スコアの更新と描画
-        score.update(screen) 
 
+        # 応用1スコアの更新と描画
+        score.update(screen) 
+        # 応用3
+        for ex in explosions:
+            ex.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
